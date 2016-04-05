@@ -1,0 +1,34 @@
+relaygram:
+  # Bot Token obtained from @BotFather
+  bot_token: "BOT-TOKEN-HERE"
+
+media:
+  # Port to host content on. (0 to disable hosting)
+  port: 9090
+
+  # Location to send for media.
+  # You may want to host an nginx proxy for hostname alias support on port 80. Just be careful as any type of file can be uploaded.
+  base_url: "http://mydomain.com:9090/"
+
+  # How many characters to randomize in url path (0 to disable)
+  randomize_name_length: 8
+
+telegram:
+  # Send topic changes to Telegram
+  send_topic: true
+
+  # Prefix style - See doc for all variables
+  prefix_pattern: "<${nick}>"
+
+  # Hold old of messages should we consider to proxy? This is useful if the bot is not running for significant periods of time.
+  # In Seconds
+  message_age: 300
+
+irc:
+    servers:
+      - "Freenode"
+        hostname: "irc.freenode.net"
+        port: 6667
+        nickname: "TGBot"
+        channels:
+          - "#myircchannel"
