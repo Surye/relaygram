@@ -17,18 +17,32 @@ telegram:
   # Send topic changes to Telegram
   send_topic: true
 
-  # Prefix style - See doc for all variables
-  prefix_pattern: "<${nick}>"
+  # Message patterns - See doc for all variables
+  message_pattern: "<{nick}> {msg}"
+  action_pattern: "* {nick} {msg}"
+  kick_pattern: "** {kicker} has been kicked by {nick}: {msg}"
+  join_pattern: "** {nick} has joined"
+  part_pattern: "** {nick} has left"
+  topic_pattern: "** Topic has been changed to {msg} by {src}"
+
 
   # Hold old of messages should we consider to proxy? This is useful if the bot is not running for significant periods of time.
   # In Seconds
   message_age: 300
 
 irc:
-    servers:
-      - "Freenode"
-        hostname: "irc.freenode.net"
-        port: 6667
-        nickname: "TGBot"
-        channels:
-          - "#myircchannel"
+  # Message patterns - See doc for all variables
+  message_pattern: "<{nick}> {msg}"
+  action_pattern: "* {nick} {msg}"
+  kick_pattern: "** {kicker} has been kicked by {nick}"
+  join_pattern: "** {nick} has joined"
+  part_pattern: "** {nick} has left"
+  topic_pattern: "** Topic has been changed to {msg} by {src}"
+
+  servers:
+    - "Freenode"
+      hostname: "irc.freenode.net"
+      port: 6667
+      nickname: "TGBot"
+      channels:
+        - "#myircchannel"

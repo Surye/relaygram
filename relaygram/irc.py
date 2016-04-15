@@ -52,39 +52,39 @@ class IRCHandler:
         [server, channel] = self.channel_map.get_dest("tg", src_id).split(":")
 
         if event.type is events.Message:
-            self.irc_servers[server].privmsg(channel, "<{}> {}".format(event.user, event.msg))
+            self.irc_servers[server].privmsg(channel, self.config['irc']['message_pattern'].format(nick=event.user, msg=event.msg))
         elif event.type is events.Join:
-            pass
+            self.irc_servers[server].privmsg(channel, self.config['irc']['join_pattern'].format(nick=event.user, msg=event.msg))
         elif event.type is events.Part:
-            pass
+            self.irc_servers[server].privmsg(channel, self.config['irc']['part_pattern'].format(nick=event.user, msg=event.msg))
         elif event.type is events.Kick:
-            pass
+            self.irc_servers[server].privmsg(channel, self.config['irc']['kick_pattern'].format(nick=event.user, msg=event.msg))
         elif event.type is events.Topic:
-            pass
+            self.irc_servers[server].privmsg(channel, self.config['irc']['topic_pattern'].format(nick=event.user, msg=event.msg))
         elif event.type is events.Action:
-            pass
+            self.irc_servers[server].privmsg(channel, self.config['irc']['topic_pattern'].format(nick=event.user, msg=event.msg))
 
     def irc_pubmsg(self, connection, event):
-        item = events.Message(src=(connection.server, event.target), user=event.source, msg=event.arguments[0])
+        item = events.Message(src=(connection.server, event.target), user=event.source.split("!")[0], msg=event.arguments[0])
         [queue.put_nowait(item) for queue in self.out_queues]
 
     def irc_topic(self, connection, event):
-        item = events.Topic(src=(connection.server, event.target), user=event.source, msg=event.arguments[0])
+        item = events.Topic(src=(connection.server, event.target), user=event.source.split("!")[0], msg=event.arguments[0])
         [queue.put_nowait(item) for queue in self.out_queues]
 
     def irc_action(self, connection, event):
-        item = events.Action(src=(connection.server, event.target), user=event.source, msg=event.arguments[0])
+        item = events.Action(src=(connection.server, event.target), user=event.source.split("!")[0], msg=event.arguments[0])
         [queue.put_nowait(item) for queue in self.out_queues]
 
     def irc_join(self, connection, event):
-        item = events.Join(src=(connection.server, event.target), user=event.source)
+        item = events.Join(src=(connection.server, event.target), user=event.source.split("!")[0])
         [queue.put_nowait(item) for queue in self.out_queues]
 
     def irc_part(self, connection, event):
-        item = events.Part(src=(connection.server, event.target), user=event.source)
+        item = events.Part(src=(connection.server, event.target), user=event.source.split("!")[0])
         [queue.put_nowait(item) for queue in self.out_queues]
 
     def irc_kick(self, connection, event):
-        item = events.Kick(src=(connection.server, event.target), user=event.source, msg=event.arguments)
+        item = events.Kick(src=(connection.server, event.target), user=event.source.split("!")[0], msg=event.arguments)
         [queue.put_nowait(item) for queue in self.out_queues]
 
