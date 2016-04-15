@@ -10,7 +10,7 @@ media:
   # You may want to host an nginx proxy for hostname alias support on port 80. Just be careful as any type of file can be uploaded.
   base_url: "http://mydomain.com:9090/"
 
-  # How many characters to randomize in url path (0 to disable)
+  # How many characters to randomize in url path (defaults to 8)
   randomize_name_length: 8
 
 telegram:

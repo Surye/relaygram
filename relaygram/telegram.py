@@ -1,8 +1,12 @@
+import os
 from queue import Empty
 from . import events
 from time import sleep
 import twx.botapi
 from threading import Thread
+import random
+import string
+import pathlib
 
 
 class ConfigError(Exception):
@@ -36,10 +40,11 @@ class TelegramHandler:
         while True:
             # Process Telegram Events
             updates = self.twx.get_updates(last_update).wait()
-            for update in updates:
-                last_update = update.update_id+1
-                self.process_tg_msg(update)
-            self.process_queue_once()
+            if updates:
+                for update in updates:
+                    last_update = update.update_id+1
+                    self.process_tg_msg(update)
+                self.process_queue_once()
             sleep(.1)
 
     def process_queue_once(self):
@@ -89,8 +94,52 @@ class TelegramHandler:
             if self.channel_map.get_dest("tg", update.message.chat.id) is None:
                 self.process_mapping(update)
             else:
-                item = events.Message(src=("tg", update.message.chat.id), user=update.message.sender.username, msg=update.message.text)
+                message = update.message
+                user = update.message.sender.username
+                src = ("tg", message.chat.id)
+
+                if 'randomize_name_length' in self.config['media'] and self.config['media']['randomize_name_length'] > 0:
+                    file_basename = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(self.config['media']['randomize_name_length']))
+                else:
+                    file_basename = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+
+                if message.photo:
+                    file = self.twx.get_file(message.photo[-1].file_id).join().result
+                    ext = os.path.splitext(file.file_path)[1]
+                    filename = file_basename + ext
+                    out_file = os.path.join(self.config['media_dir'], filename)
+
+                    self.twx.download_file(file_path=file.file_path, out_file=open(out_file, 'wb'))
+                    item = events.Message(src=src, user=user, msg=self.config['media']['base_url'] + filename)
+
+                elif message.audio:
+                    pass  # TODO Download and serve file
+                elif message.sticker:
+                    pass  # TODO Download and serve file
+                elif message.video:
+                    pass  # TODO Download and serve file
+                elif message.voice:
+                    pass  # TODO Download and serve file
+                elif message.document:
+                    pass  # TODO Download and serve file
+                elif message.contact:
+                    pass  # TODO Share contact
+                elif message.location:
+                    pass  # TODO Share location
+                elif message.venue:
+                    pass  # TODO Share venue
+                elif message.left_chat_member:
+                    pass  # TODO part event
+                elif message.new_chat_member:
+                    pass  # TODO join event
+                else:
+                    # Plain message
+                    item = events.Message(src=src, user=user, msg=message.text)
+
                 [queue.put_nowait(item) for queue in self.out_queues]
+
+                if message.migrate_to_chat_id:
+                    pass  # TODO Update mapping
 
     def process_mapping(self, update):
         if update.message.reply_to_message and update.message.reply_to_message.message_id in self.connect_request:

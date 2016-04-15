@@ -20,6 +20,11 @@ class RelaygramBot:
         self.verbosity = verbosity
         self.config_dir = config_dir
         self.config = yaml.load(open(os.path.join(config_dir, "relaygram.yaml"), "r"))
+        self.config['config_dir'] = config_dir
+        self.config['media_dir'] = os.path.join(config_dir, "media")
+        if not os.path.exists(self.config['media_dir']):
+            os.mkdir(self.config['media_dir'])
+
         try:
             self.channel_map = ChannelMap(os.path.join(config_dir, "channel_map.json"))
         except FileNotFoundError:
