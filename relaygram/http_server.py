@@ -7,8 +7,8 @@ class HTTPHandler:
     def __init__(self, config):
         self.config = config
 
-        handler = HTTPHandler.make_http_handler('C:/tmp/test/')
-        self.httpd = http.server.HTTPServer(('', 8000), handler)
+        handler = HTTPHandler.make_http_handler(self.config['media_dir'])
+        self.httpd = http.server.HTTPServer(('', self.config['media']['port']), handler)
 
         self.thread = Thread(target=self.main_loop)
 
