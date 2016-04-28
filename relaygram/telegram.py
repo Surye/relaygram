@@ -56,19 +56,26 @@ class TelegramHandler:
 
     def process_event(self, event):
         dest = self.channel_map.get_dest("irc", "{}:{}".format(event.src[0], event.src[1]))
+        tgconfig = self.config['telegram']
 
         if event.type is events.Message:
-            self.twx.send_message(dest, self.config['telegram']['message_pattern'].format(nick=event.user, msg=event.msg))
+            msg = tgconfig['message_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Join:
-            self.twx.send_message(dest, self.config['telegram']['join_pattern'].format(nick=event.user, msg=event.msg))
+            msg = tgconfig['join_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Part:
-            self.twx.send_message(dest, self.config['telegram']['part_pattern'].format(nick=event.user, msg=event.msg))
+            msg = tgconfig['part_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Kick:
-            self.twx.send_message(dest, self.config['telegram']['kick_pattern'].format(kicker=event.user, nick=event.msg[0], msg=event.msg[1]))
+            msg = tgconfig['kick_pattern'].format(kicker=event.user, nick=event.msg[0], msg=event.msg[1])
         elif event.type is events.Topic:
-            self.twx.send_message(dest, self.config['telegram']['topic_pattern'].format(nick=event.user, msg=event.msg))
+            msg = tgconfig['topic_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Action:
-            self.twx.send_message(dest, self.config['telegram']['action_pattern'].format(nick=event.user, msg=event.msg))
+            msg = tgconfig['action_pattern'].format(nick=event.user, msg=event.msg)
+        else:
+            msg = None
+
+        if msg:
+            # TODO: Log here
+            self.twx.send_message(dest, msg)
 
 
     @staticmethod

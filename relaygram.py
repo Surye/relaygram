@@ -2,12 +2,11 @@ import os.path
 from argparse import ArgumentParser
 from queue import Queue
 from time import sleep
-
-import twx.botapi
 import yaml
 
 from relaygram.irc import IRCHandler
 from relaygram.telegram import TelegramHandler
+from relaygram.http_server import HTTPHandler
 from relaygram.channel_map import ChannelMap
 
 
@@ -38,6 +37,11 @@ class RelaygramBot:
 
         self.irc.run()
         self.telegram.run()
+
+        # Media Hoster
+        if self.config['media']['port'] and self.config['media']['port'] is not 0:
+            self.httpd = HTTPHandler(self.verbosity, self.config)
+            self.httpd.run()
 
         while True:
             sleep(.1)
