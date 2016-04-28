@@ -4,8 +4,7 @@ import os.path
 
 
 class HTTPHandler:
-    def __init__(self, verbosity, config):
-        self.verbosity = verbosity
+    def __init__(self, config):
         self.config = config
 
         handler = HTTPHandler.make_http_handler('C:/tmp/test/')

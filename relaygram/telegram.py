@@ -6,7 +6,7 @@ import twx.botapi
 from threading import Thread
 import random
 import string
-import pathlib
+import logging
 
 
 class ConfigError(Exception):
@@ -14,9 +14,9 @@ class ConfigError(Exception):
 
 
 class TelegramHandler:
-    def __init__(self, channel_map, verbosity, config, my_queue, out_queues):
+    def __init__(self, channel_map, config, my_queue, out_queues):
+        self.log = logging.getLogger("relaygram.telegram")
         self.channel_map = channel_map
-        self.verbosity = verbosity
         self.config = config
         self.my_queue = my_queue
         self.out_queues = out_queues
@@ -44,7 +44,7 @@ class TelegramHandler:
                 for update in updates:
                     last_update = update.update_id+1
                     self.process_tg_msg(update)
-                self.process_queue_once()
+            self.process_queue_once()
             sleep(.1)
 
     def process_queue_once(self):
@@ -74,9 +74,8 @@ class TelegramHandler:
             msg = None
 
         if msg:
-            # TODO: Log here
+            self.log.info("Sending to telegram: {msg}".format(msg=msg))
             self.twx.send_message(dest, msg)
-
 
     @staticmethod
     def build_keyboard(buttons):
