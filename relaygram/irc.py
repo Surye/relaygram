@@ -29,6 +29,7 @@ class IRCHandler:
         # System Events
         self.irc.add_global_handler("namreply", handler=self.irc_namreply)
         self.irc.add_global_handler("disconnect", handler=self.irc_disconnect)
+        self.irc.add_global_handler("nicknameinuse", handler=self.irc_nicknameinuse)
 
         self.irc_servers = {}
         self.irc_channels = {}
@@ -118,6 +119,13 @@ class IRCHandler:
     def irc_kick(self, connection, event):
         item = events.Kick(src=(connection.server, event.target), user=event.source.nick, msg=event.arguments)
         [queue.put_nowait(item) for queue in self.out_queues]
+
+    def irc_nicknameinuse(self, connection, event):
+        self.log.warning("Nickname in use, using {}".format(connection.get_nickname() + "_"))
+        connection.nick(connection.get_nickname() + "_")
+
+        for channel in self.irc_channels[connection.server].keys():
+            connection.join(channel)
 
     def irc_namreply(self, connection, event):
         ch_type, channel, nick_list = event.arguments
