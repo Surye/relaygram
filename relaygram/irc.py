@@ -87,6 +87,7 @@ class IRCHandler:
             self.log.info("Sending to irc: {msg}".format(msg=msg))
             for line in msg.splitlines():
                 self.irc_servers[server].privmsg(channel, line)
+                sleep(0.75)
 
     def irc_pubmsg(self, connection, event):
         item = events.Message(src=(connection.server, event.target), user=event.source.nick, msg=event.arguments[0])
