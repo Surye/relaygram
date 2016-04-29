@@ -14,6 +14,8 @@ class IRCHandler:
         self.my_queue = my_queue
         self.out_queues = out_queues
 
+        self.initalized_servers = []
+
         # Build up IRC connections
         self.irc = irc.Reactor()
 
@@ -30,6 +32,7 @@ class IRCHandler:
         self.irc.add_global_handler("namreply", handler=self.irc_namreply)
         self.irc.add_global_handler("disconnect", handler=self.irc_disconnect)
         self.irc.add_global_handler("nicknameinuse", handler=self.irc_nicknameinuse)
+        self.irc.add_global_handler("umode", handler=self.irc_umode)
 
         self.irc_servers = {}
         self.irc_channels = {}
@@ -44,8 +47,15 @@ class IRCHandler:
         self.irc_channels[irc_server.server] = {}
         for channel in server_params['channels']:
             self.irc_channels[irc_server.server][channel] = set()
-            irc_server.join(channel)
+
         self.irc_servers[server_params['hostname']] = irc_server
+
+    def irc_umode(self, connection, event):
+        #  Set when server connection is finished, some servers don't like early join messages.
+        if connection not in self.initalized_servers:
+            for channel in self.irc_channels[connection.server].keys():
+                connection.join(channel)
+        self.initalized_servers.append(connection)
 
     def run(self):
         self.thread.start()
