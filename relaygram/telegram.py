@@ -119,13 +119,26 @@ class TelegramHandler:
 
                 src = ("tg", message.chat.id)
 
+                reply_prefix = ""
+                if message.reply_to_message:
+                    sender = message.reply_to_message.sender
+                    if sender.id != self.twx.id:
+                        reply_prefix = self.config['telegram']['reply_prefix'].format(nick=(sender.username or "{} {}".format(sender.first_name, sender.last_name)))
+                    else:
+                        try:
+                            # TODO: Changing display patterns will break this, figure out how to make it dynamic. (Maybe just configure the regex)
+                            nick = re.match(r'<(.*?)>', message.reply_to_message.text).group(1)
+                            reply_prefix = self.config['telegram']['reply_prefix'].format(nick=nick)
+                        except (IndexError, AttributeError):  # If there's a problem just don't reply.
+                            reply_prefix = ''
+
                 if message.photo:
                     file = self.twx.get_file(message.photo[-1].file_id).join().result
                     filename = self.store_telegram_media(file)
                     mimetype = mimetypes.guess_type(filename)[0]
                     file_size = self.sizeof_fmt(message.photo[-1].file_size)
 
-                    msg = "[{mime}] {url} [{width}x{height}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                    msg = "{reply_prefix}[{mime}] {url} [{width}x{height}] [{file_size}]".format(reply_prefix=reply_prefix, mime=mimetype, url=self.config['media']['base_url'] + filename,
                                                                                    width=message.photo[-1].width, height=message.photo[-1].height, file_size=file_size)
                     if message.caption:
                         msg = "{msg} {caption}".format(msg=msg, caption=message.caption)
@@ -139,7 +152,7 @@ class TelegramHandler:
 
                     duration = self.time_fmt(message.audio.duration)
 
-                    msg = "[{mime}] {url} [{duration}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                    msg = "{reply_prefix}[{mime}] {url} [{duration}] [{file_size}]".format(reply_prefix=reply_prefix, mime=mimetype, url=self.config['media']['base_url'] + filename,
                                                                             duration=duration, file_size=file_size)
                     item = events.Message(src=src, user=user, msg=msg)
 
@@ -149,7 +162,7 @@ class TelegramHandler:
                     mimetype = mimetypes.guess_type(filename)[0]
                     file_size = self.sizeof_fmt(message.sticker.file_size)
 
-                    msg = "[sticker] {url} [{width}x{height}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                    msg = "{reply_prefix}[sticker] {url} [{width}x{height}] [{file_size}]".format(reply_prefix=reply_prefix, mime=mimetype, url=self.config['media']['base_url'] + filename,
                                                                                    width=message.sticker.width, height=message.sticker.height, file_size=file_size)
                     item = events.Message(src=src, user=user, msg=msg)
 
@@ -161,7 +174,7 @@ class TelegramHandler:
 
                     duration = self.time_fmt(message.video.duration)
 
-                    msg = "[{mime}] {url} [{width}x{height}] [{duration}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                    msg = "{reply_prefix}[{mime}] {url} [{width}x{height}] [{duration}] [{file_size}]".format(reply_prefix=reply_prefix, mime=mimetype, url=self.config['media']['base_url'] + filename,
                                                                                                duration=duration, width=message.video.width, height=message.video.height,
                                                                                                file_size=file_size)
                     if message.caption:
@@ -177,7 +190,7 @@ class TelegramHandler:
 
                     duration = self.time_fmt(message.voice.duration)
 
-                    msg = "[voice msg] {url} [{duration}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                    msg = "{reply_prefix}[voice msg] {url} [{duration}] [{file_size}]".format(reply_prefix=reply_prefix, mime=mimetype, url=self.config['media']['base_url'] + filename,
                                                                                 duration=duration, file_size=file_size)
                     item = events.Message(src=src, user=user, msg=msg)
 
@@ -189,25 +202,25 @@ class TelegramHandler:
 
                     size = message.document.file_size
 
-                    msg = "[{mime}] {url} [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                    msg = "{reply_prefix}[{mime}] {url} [{file_size}]".format(reply_prefix=reply_prefix, mime=mimetype, url=self.config['media']['base_url'] + filename,
                                                                file_size=file_size)
 
                     item = events.Message(src=src, user=user, msg=msg)
 
                 elif message.contact:
                     if message.contact.last_name:
-                        msg = "[contact] {contact.first_name} {contact.last_name} - {contact.phone_number}".format(contact=message.contact)
+                        msg = "{reply_prefix}[contact] {contact.first_name} {contact.last_name} - {contact.phone_number}".format(reply_prefix=reply_prefix, contact=message.contact)
                     else:
-                        msg = "[contact] {contact.first_name} {contact.last_name} - {contact.phone_number}".format(contact=message.contact)
+                        msg = "{reply_prefix}[contact] {contact.first_name} {contact.last_name} - {contact.phone_number}".format(reply_prefix=reply_prefix, contact=message.contact)
                     item = events.Message(src=src, user=user, msg=msg)
 
                 elif message.venue:
-                    msg = "[venue] {venue.title} {venue.address} [https://www.google.com/maps/?q={location.latitude},{location.longitude}]".format(location=message.location,
+                    msg = "{reply_prefix}[venue] {venue.title} {venue.address} [https://www.google.com/maps/?q={location.latitude},{location.longitude}]".format(reply_prefix=reply_prefix, location=message.location,
                                                                                                                                                    venue=message.venue)
                     item = events.Message(src=src, user=user, msg=msg)
 
                 elif message.location:
-                    msg = "[location] https://www.google.com/maps/?q={location.latitude},{location.longitude}".format(location=message.location)
+                    msg = "{reply_prefix}[location] https://www.google.com/maps/?q={location.latitude},{location.longitude}".format(reply_prefix=reply_prefix, location=message.location)
                     item = events.Message(src=src, user=user, msg=msg)
 
                 elif message.left_chat_member:
@@ -218,7 +231,7 @@ class TelegramHandler:
                                                       "{} {}".format(message.new_chat_member.first_name, message.new_chat_member.last_name)))
                 else:
                     # Plain message
-                    item = events.Message(src=src, user=user, msg=message.text)
+                    item = events.Message(src=src, user=user, msg="{reply_prefix}{msg}".format(reply_prefix=reply_prefix, msg=message.text))
 
                 [queue.put_nowait(item) for queue in self.out_queues]
 

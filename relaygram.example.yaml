@@ -33,6 +33,7 @@ telegram:
   join_pattern: "** {nick} has joined"
   part_pattern: "** {nick} has left"
   topic_pattern: "** Topic has been changed to {msg} by {src}"
+  reply_prefix: "{nick}: "
 
 
   # Hold old of messages should we consider to proxy? This is useful if the bot is not running for significant periods of time.
@@ -47,6 +48,7 @@ irc:
   join_pattern: "** {nick} has joined"
   part_pattern: "** {nick} has left"
   topic_pattern: "** Topic has been changed to {msg} by {src}"
+
 
   servers:
     - "Freenode"
