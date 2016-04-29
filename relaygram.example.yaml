@@ -17,6 +17,9 @@ telegram:
   # Send topic changes to Telegram
   send_topic: true
 
+  # Convert usernames to mentions
+  convert_mentions: true
+
   # Message patterns - See doc for all variables
   message_pattern: "<{nick}> {msg}"
   action_pattern: "* {nick} {msg}"

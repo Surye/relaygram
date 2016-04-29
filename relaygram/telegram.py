@@ -8,6 +8,7 @@ import random
 import string
 import logging
 import mimetypes
+import re
 
 
 class ConfigError(Exception):
@@ -22,6 +23,7 @@ class TelegramHandler:
         self.my_queue = my_queue
         self.out_queues = out_queues
         self.connect_request = {}
+        self.seen_usernames = set()
 
         # Setup Telegram bot
         try:
@@ -55,12 +57,18 @@ class TelegramHandler:
         except Empty:
             pass  # Don't Care
 
+    def add_mentions(self, msg):
+        if self.config['relaygram']['convert_mentions']:
+            for username in self.seen_usernames:
+                msg = re.sub(r'\b' + re.escape(username) + r'\b', "@{}".format(username), msg)
+        return msg
+
     def process_event(self, event):
         dest = self.channel_map.get_dest("irc", "{}:{}".format(event.src[0], event.src[1]))
         tgconfig = self.config['telegram']
 
         if event.type is events.Message:
-            msg = tgconfig['message_pattern'].format(nick=event.user, msg=event.msg)
+            msg = tgconfig['message_pattern'].format(nick=event.user, msg=self.add_mentions(event.msg))
         elif event.type is events.Join:
             msg = tgconfig['join_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Part:
@@ -70,7 +78,7 @@ class TelegramHandler:
         elif event.type is events.Topic:
             msg = tgconfig['topic_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Action:
-            msg = tgconfig['action_pattern'].format(nick=event.user, msg=event.msg)
+            msg = tgconfig['action_pattern'].format(nick=event.user, msg=self.add_mentions(event.msg))
         else:
             msg = None
 
@@ -103,6 +111,8 @@ class TelegramHandler:
             else:
                 message = update.message
                 user = update.message.sender.username
+                self.seen_usernames.add(user)
+
                 src = ("tg", message.chat.id)
 
                 if message.photo:
