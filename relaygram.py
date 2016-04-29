@@ -65,6 +65,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if not os.path.exists(args.config_dir):
-        parser.error("Config directory {} does not exist".format(args.config_dir))
+        parser.error("Config directory {} does not exist. Please create it and copy relaygram.example.yaml to it as relaygram.yaml.".format(args.config_dir))
 
     bot = RelaygramBot(args.verbosity, args.config_dir)
