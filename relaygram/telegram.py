@@ -236,11 +236,12 @@ class TelegramHandler:
 
         return filename
 
-
     def process_mapping(self, update):
         if update.message.reply_to_message and update.message.reply_to_message.message_id in self.connect_request:
             try:
                 [server_name, channel_name] = update.message.text.rsplit(": ", 1)
+                reply_hide = twx.botapi.ReplyKeyboardHide.create()
+                self.twx.send_message(update.message.chat.id, "IRC Channel not found, please connect", reply_markup=reply_hide)
             except ValueError:
                 print("Bad choice, could not connect channels")
             server_host = self.config["irc"]["servers"][server_name]["hostname"]
