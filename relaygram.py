@@ -27,12 +27,12 @@ class RelaygramBot:
             os.mkdir(self.config['media_dir'])
 
         # Setup Logging
-        if verbosity == 1:
-            logging.basicConfig(level=logging.INFO)
-        elif verbosity >= 2:
-            logging.basicConfig(level=logging.DEBUG)
+        if verbosity:
+            if verbosity == 1:
+                logging.basicConfig(level=logging.INFO)
+            elif verbosity >= 2:
+                logging.basicConfig(level=logging.DEBUG)
 
-        logging.getLogger("irc").setLevel(logging.DEBUG)
         logging.getLogger("requests").setLevel(logging.WARNING)  # Quiet requests, too verbose at INFO
 
         try:
