@@ -58,9 +58,9 @@ class TelegramHandler:
             pass  # Don't Care
 
     def add_mentions(self, msg):
-        if self.config['relaygram']['convert_mentions']:
+        if self.config['telegram']['convert_mentions']:
             for username in self.seen_usernames:
-                msg = re.sub(r'\b' + re.escape(username) + r'\b', "@{}".format(username), msg)
+                msg = re.sub(r'\b' + re.escape(username) + r'\b', "@{}".format(username), msg, flags=re.I)
         return msg
 
     def process_event(self, event):
