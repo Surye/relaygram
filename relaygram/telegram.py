@@ -76,7 +76,8 @@ class TelegramHandler:
         elif event.type is events.Kick:
             msg = tgconfig['kick_pattern'].format(kicker=event.user, nick=event.msg[0], msg=event.msg[1])
         elif event.type is events.Topic:
-            msg = tgconfig['topic_pattern'].format(nick=event.user, msg=event.msg)
+            if self.config['telegram']['send_topic']:
+                msg = tgconfig['topic_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Action:
             msg = tgconfig['action_pattern'].format(nick=event.user, msg=self.add_mentions(event.msg))
         else:
