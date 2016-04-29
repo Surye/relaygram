@@ -28,7 +28,7 @@ class HTTPHandler:
             def do_GET(self):
                 file_path = os.path.abspath(root_path + self.path)
 
-                if os.path.commonpath([root_path, file_path]) != os.path.abspath(root_path):  # Detect path traversal attempt
+                if os.path.commonprefix([root_path, file_path]) != os.path.abspath(root_path):  # Detect path traversal attempt
                     self.send_error(501, "Nice try")
                 else:
                     if not os.path.exists(file_path) or not os.path.isfile(file_path):
