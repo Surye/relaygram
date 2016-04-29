@@ -252,7 +252,7 @@ class TelegramHandler:
                 for channel in server_params['channels']:
                     channels.append('{}: {}'.format(server_name, channel))
 
-            reply_markup = twx.botapi.ReplyKeyboardMarkup.create(self.build_keyboard(channels), one_time_keyboard=True)
+            reply_markup = twx.botapi.ReplyKeyboardMarkup.create(self.build_keyboard(channels), one_time_keyboard=True, selective=True)
             request = self.twx.send_message(update.message.chat.id, "IRC Channel not found, please connect", reply_markup=reply_markup).join()
             self.connect_request[request.result.message_id] = update.message.chat.id
 
