@@ -7,6 +7,7 @@ from threading import Thread
 import random
 import string
 import logging
+import mimetypes
 
 
 class ConfigError(Exception):
@@ -104,48 +105,137 @@ class TelegramHandler:
                 user = update.message.sender.username
                 src = ("tg", message.chat.id)
 
-                if 'randomize_name_length' in self.config['media'] and self.config['media']['randomize_name_length'] > 0:
-                    file_basename = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(self.config['media']['randomize_name_length']))
-                else:
-                    file_basename = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
-
                 if message.photo:
                     file = self.twx.get_file(message.photo[-1].file_id).join().result
-                    ext = os.path.splitext(file.file_path)[1]
-                    filename = file_basename + ext
-                    out_file = os.path.join(self.config['media_dir'], filename)
+                    filename = self.store_telegram_media(file)
+                    mimetype = mimetypes.guess_type(filename)[0]
+                    file_size = self.sizeof_fmt(message.photo[-1].file_size)
 
-                    self.twx.download_file(file_path=file.file_path, out_file=open(out_file, 'wb'))
-                    item = events.Message(src=src, user=user, msg=self.config['media']['base_url'] + filename)
+                    msg = "[{mime}] {url} [{width}x{height}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                                                                                   width=message.photo[-1].width, height=message.photo[-1].height, file_size=file_size)
+                    if message.caption:
+                        msg = "{msg} {caption}".format(msg=msg, caption=message.caption)
+                    item = events.Message(src=src, user=user, msg=msg)
 
                 elif message.audio:
-                    pass  # TODO Download and serve file
+                    file = self.twx.get_file(message.audio.file_id).join().result
+                    filename = self.store_telegram_media(file)
+                    mimetype = mimetypes.guess_type(filename)[0]
+                    file_size = self.sizeof_fmt(message.audio.file_size)
+
+                    duration = self.time_fmt(message.audio.duration)
+
+                    msg = "[{mime}] {url} [{duration}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                                                                            duration=duration, file_size=file_size)
+                    item = events.Message(src=src, user=user, msg=msg)
+
                 elif message.sticker:
-                    pass  # TODO Download and serve file
+                    file = self.twx.get_file(message.sticker.file_id).join().result
+                    filename = self.store_telegram_media(file)
+                    mimetype = mimetypes.guess_type(filename)[0]
+                    file_size = self.sizeof_fmt(message.sticker.file_size)
+
+                    msg = "[sticker] {url} [{width}x{height}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                                                                                   width=message.sticker.width, height=message.sticker.height, file_size=file_size)
+                    item = events.Message(src=src, user=user, msg=msg)
+
                 elif message.video:
-                    pass  # TODO Download and serve file
+                    file = self.twx.get_file(message.video.file_id).join().result
+                    filename = self.store_telegram_media(file)
+                    mimetype = mimetypes.guess_type(filename)[0]
+                    file_size = self.sizeof_fmt(message.video.file_size)
+
+                    duration = self.time_fmt(message.video.duration)
+
+                    msg = "[{mime}] {url} [{width}x{height}] [{duration}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                                                                                               duration=duration, width=message.video.width, height=message.video.height,
+                                                                                               file_size=file_size)
+                    if message.caption:
+                        msg = "{msg} {caption}".format(msg=msg, caption=message.caption)
+
+                    item = events.Message(src=src, user=user, msg=msg)
+
                 elif message.voice:
-                    pass  # TODO Download and serve file
+                    file = self.twx.get_file(message.voice.file_id).join().result
+                    filename = self.store_telegram_media(file)
+                    mimetype = mimetypes.guess_type(filename)[0]
+                    file_size = self.sizeof_fmt(message.voice.file_size)
+
+                    duration = self.time_fmt(message.voice.duration)
+
+                    msg = "[voice msg] {url} [{duration}] [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                                                                                duration=duration, file_size=file_size)
+                    item = events.Message(src=src, user=user, msg=msg)
+
                 elif message.document:
-                    pass  # TODO Download and serve file
+                    file = self.twx.get_file(message.document.file_id).join().result
+                    filename = self.store_telegram_media(file)
+                    mimetype = mimetypes.guess_type(filename)[0]
+                    file_size = self.sizeof_fmt(message.document.file_size)
+
+                    size = message.document.file_size
+
+                    msg = "[{mime}] {url} [{file_size}]".format(mime=mimetype, url=self.config['media']['base_url'] + filename,
+                                                               file_size=file_size)
+
+                    item = events.Message(src=src, user=user, msg=msg)
+
                 elif message.contact:
-                    pass  # TODO Share contact
-                elif message.location:
-                    pass  # TODO Share location
+                    if message.contact.last_name:
+                        msg = "[contact] {contact.first_name} {contact.last_name} - {contact.phone_number}".format(contact=message.contact)
+                    else:
+                        msg = "[contact] {contact.first_name} {contact.last_name} - {contact.phone_number}".format(contact=message.contact)
+                    item = events.Message(src=src, user=user, msg=msg)
+
                 elif message.venue:
-                    pass  # TODO Share venue
+                    msg = "[venue] {venue.title} {venue.address} [https://www.google.com/maps/?q={location.latitude},{location.longitude}]".format(location=message.location,
+                                                                                                                                                   venue=message.venue)
+                    item = events.Message(src=src, user=user, msg=msg)
+
+                elif message.location:
+                    msg = "[location] https://www.google.com/maps/?q={location.latitude},{location.longitude}".format(location=message.location)
+                    item = events.Message(src=src, user=user, msg=msg)
+
                 elif message.left_chat_member:
-                    pass  # TODO part event
+                    item = events.Part(src=src, user=(message.left_chat_member.username or
+                                                      "{} {}".format(message.left_chat_member.first_name, message.left_chat_member.last_name)))
                 elif message.new_chat_member:
-                    pass  # TODO join event
+                    item = events.Join(src=src, user=(message.new_chat_member.username or
+                                                      "{} {}".format(message.new_chat_member.first_name, message.new_chat_member.last_name)))
                 else:
                     # Plain message
                     item = events.Message(src=src, user=user, msg=message.text)
 
                 [queue.put_nowait(item) for queue in self.out_queues]
 
-                if message.migrate_to_chat_id:
-                    pass  # TODO Update mapping
+    @staticmethod
+    def time_fmt(runtime):
+        m, s = divmod(runtime, 60)
+        h, m = divmod(m, 60)
+        duration = "{}:{:02}:{:02}".format(h, m, s)
+        return duration
+
+    @staticmethod
+    def sizeof_fmt(num, suffix='B'):
+        for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+            if abs(num) < 1024.0:
+                return "%3.1f%s%s" % (num, unit, suffix)
+            num /= 1024.0
+        return "%.1f%s%s" % (num, 'Yi', suffix)
+
+    def store_telegram_media(self, file):
+        if 'randomize_name_length' in self.config['media'] and self.config['media']['randomize_name_length'] > 0:
+            file_basename = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(self.config['media']['randomize_name_length']))
+        else:
+            file_basename = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+
+        ext = os.path.splitext(file.file_path)[1]
+        filename = file_basename + ext
+        out_file = os.path.join(self.config['media_dir'], filename)
+        self.twx.download_file(file_path=file.file_path, out_file=open(out_file, 'wb'))
+
+        return filename
+
 
     def process_mapping(self, update):
         if update.message.reply_to_message and update.message.reply_to_message.message_id in self.connect_request:
