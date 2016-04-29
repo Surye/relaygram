@@ -70,11 +70,14 @@ class TelegramHandler:
         if event.type is events.Message:
             msg = tgconfig['message_pattern'].format(nick=event.user, msg=self.add_mentions(event.msg))
         elif event.type is events.Join:
-            msg = tgconfig['join_pattern'].format(nick=event.user, msg=event.msg)
+            if self.config['telegram']['send_join']:
+                msg = tgconfig['join_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Part:
-            msg = tgconfig['part_pattern'].format(nick=event.user, msg=event.msg)
+            if self.config['telegram']['send_part']:
+                msg = tgconfig['part_pattern'].format(nick=event.user, msg=event.msg)
         elif event.type is events.Kick:
-            msg = tgconfig['kick_pattern'].format(kicker=event.user, nick=event.msg[0], msg=event.msg[1])
+            if self.config['telegram']['send_part']:
+                msg = tgconfig['kick_pattern'].format(kicker=event.user, nick=event.msg[0], msg=event.msg[1])
         elif event.type is events.Topic:
             if self.config['telegram']['send_topic']:
                 msg = tgconfig['topic_pattern'].format(nick=event.user, msg=event.msg)

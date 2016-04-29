@@ -17,6 +17,12 @@ telegram:
   # Send topic changes to Telegram
   send_topic: true
 
+  # Send part messages to Telegram
+  send_part: true
+
+  # Send join messages to Telegram
+  send_join: true
+
   # Convert usernames to mentions
   convert_mentions: true
 
