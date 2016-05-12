@@ -9,7 +9,7 @@ import string
 import logging
 import mimetypes
 import re
-
+import time
 
 class ConfigError(Exception):
     pass
@@ -67,6 +67,8 @@ class TelegramHandler:
         dest = self.channel_map.get_dest("irc", "{}:{}".format(event.src[0], event.src[1]))
         tgconfig = self.config['telegram']
 
+        msg = None
+
         if event.type is events.Message:
             msg = tgconfig['message_pattern'].format(nick=event.user, msg=self.add_mentions(event.msg))
         elif event.type is events.Join:
@@ -116,6 +118,9 @@ class TelegramHandler:
                 message = update.message
                 user = update.message.sender.username
                 self.seen_usernames.add(user)
+
+                if (time.time() - message.date) > self.config['telegram']['message_age']:
+                    return # Message too old
 
                 src = ("tg", message.chat.id)
 
