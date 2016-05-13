@@ -1,7 +1,7 @@
 import http.server
 from threading import Thread
 import os.path
-
+import mimetypes
 
 class HTTPHandler:
     def __init__(self, config):
@@ -34,7 +34,13 @@ class HTTPHandler:
                     if not os.path.exists(file_path) or not os.path.isfile(file_path):
                         self.send_error(404, 'File Not Found')
                     else:
+                        mimetype = mimetypes.guess_type(file_path)
+
                         self.send_response(200)
+                        if mimetype[0]:
+                            self.send_header('Content-Type', mimetype[0])
+                        self.send_header('Content-Length', os.path.getsize(file_path))
+                        self.end_headers()
                         self.wfile.write(open(file_path, mode='rb').read())
 
         return RelayGramHTTPHandler
