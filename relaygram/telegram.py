@@ -42,12 +42,15 @@ class TelegramHandler:
         last_update = 0
         while True:
             # Process Telegram Events
-            updates = self.twx.get_updates(last_update).wait()
-            if updates:
-                for update in updates:
-                    last_update = update.update_id+1
-                    self.process_tg_msg(update)
-            self.process_queue_once()
+            try:
+                updates = self.twx.get_updates(last_update).wait()
+                if updates:
+                    for update in updates:
+                        last_update = update.update_id+1
+                        self.process_tg_msg(update)
+                self.process_queue_once()
+            except:
+                pass
             sleep(.1)
 
     def process_queue_once(self):
