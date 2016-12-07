@@ -51,7 +51,7 @@ irc:
 
 
   servers:
-    - "Freenode"
+    - "Freenode":
       hostname: "irc.freenode.net"
       port: 6667
       nickname: "TGBot"
